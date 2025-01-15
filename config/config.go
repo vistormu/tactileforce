@@ -1,0 +1,50 @@
+package config
+
+import (
+    "github.com/BurntSushi/toml"
+)
+
+type Config struct {
+	Simulation SimulationConfig `toml:"simulation"`
+	Client     ClientConfig     `toml:"client"`
+    BotaSensor BotaSensorConfig `toml:"bota_sensor"`
+	Model      ModelConfig      `toml:"model"`
+}
+
+type SimulationConfig struct {
+	ExecutionTime int     `toml:"execution_time"`
+	Dt            float64 `toml:"dt"`
+}
+
+type ClientConfig struct {
+	Ip   string `toml:"ip"`
+	Port int    `toml:"port"`
+}
+
+type BotaSensorConfig struct {
+    Port         string `toml:"port"`
+    KalmanFilter KalmanFilterConfig `toml:"kf"`
+    MedianFilter MedianFilterConfig `toml:"mf"`
+}
+
+type KalmanFilterConfig struct {
+	ProcessVariance        float64 `toml:"process_variance"`
+	MeasurementVariance    float64 `toml:"measurement_variance"`
+	InitialErrorCovariance float64 `toml:"initial_error_covariance"`
+}
+
+type MedianFilterConfig struct {
+	Window int `toml:"window"`
+}
+
+type ModelConfig struct {
+	Name          string `toml:"name"`
+	ContextLength int    `toml:"context_length"`
+}
+
+func LoadConfig() (*Config, error) {
+    config := &Config{}
+    _, err := toml.DecodeFile("config.toml", config)
+
+    return config, err
+}

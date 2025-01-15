@@ -1,0 +1,22 @@
+[simulation]
+execution_time = 10 # s
+dt = 0.01 # s
+
+[client]
+ip = "145.94.126.14"
+port = 8080
+
+[bota_sensor]
+port = "/dev/tty.usbserial-AK64PUPF"
+
+[bota_sensor.mf]
+window = 5
+
+[bota_sensor.kf]
+process_variance = 0.05
+measurement_variance = 20.0
+initial_error_covariance = 1.0
+
+[model]
+name = "Transformer"
+context_length = 1920
