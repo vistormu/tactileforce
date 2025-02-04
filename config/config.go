@@ -8,6 +8,7 @@ type Config struct {
 	Simulation SimulationConfig `toml:"simulation"`
 	Client     ClientConfig     `toml:"client"`
     BotaSensor BotaSensorConfig `toml:"bota_sensor"`
+    TactileSensor TactileSensorConfig `toml:"tactile_sensor"`
 	Model      ModelConfig      `toml:"model"`
 }
 
@@ -23,6 +24,14 @@ type ClientConfig struct {
 
 type BotaSensorConfig struct {
     Port         string `toml:"port"`
+    KalmanFilter KalmanFilterConfig `toml:"kf"`
+    MedianFilter MedianFilterConfig `toml:"mf"`
+}
+
+type TactileSensorConfig struct {
+    VRef float64 `toml:"v_ref"`
+    ChipSelect int `toml:"chip_select"`
+    LedOnOff int `toml:"led_on_off"`
     KalmanFilter KalmanFilterConfig `toml:"kf"`
     MedianFilter MedianFilterConfig `toml:"mf"`
 }

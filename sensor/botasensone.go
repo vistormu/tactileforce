@@ -1,14 +1,15 @@
 package sensor
 
 import (
-    "sync"
-    "fmt"
-    "time"
-    "bytes"
-    "encoding/binary"
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"sync"
+	"time"
 
-    "go.bug.st/serial"
-    "github.com/sigurn/crc16"
+	"github.com/sigurn/crc16"
+	"go.bug.st/serial"
+    "github.com/vistormu/go-berry/utils/signal"
 )
 
 // =======
@@ -38,6 +39,83 @@ func (r1 BotaReading) Sub(r2 BotaReading) BotaReading {
     }
 }
 
+
+func BotaReadingMean(readings []BotaReading) BotaReading {
+    var sum BotaReading
+    count := len(readings)
+
+    for _, r := range readings {
+        sum.Fx += r.Fx
+        sum.Fy += r.Fy
+        sum.Fz += r.Fz
+        sum.Mx += r.Mx
+        sum.My += r.My
+        sum.Mz += r.Mz
+    }
+
+    mean := BotaReading{
+        Fx: sum.Fx / float32(count),
+        Fy: sum.Fy / float32(count),
+        Fz: sum.Fz / float32(count),
+        Mx: sum.Mx / float32(count),
+        My: sum.My / float32(count),
+        Mz: sum.Mz / float32(count),
+    }
+
+    return mean
+}
+
+// ======
+// FILTER
+// ======
+type BotaFilter struct {
+    Fx FieldFilters
+    Fy FieldFilters
+    Fz FieldFilters
+    Mx FieldFilters
+    My FieldFilters
+    Mz FieldFilters
+}
+
+func NewBotaFilter(window int, pVar, mVar, eCovar float64, initial BotaReading) *BotaFilter {
+    return &BotaFilter{
+        Fx: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.Fx)),
+        },
+        Fy: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.Fy)),
+        },
+        Fz: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.Fz)),
+        },
+        Mx: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.Mx)),
+        },
+        My: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.My)),
+        },
+        Mz: FieldFilters{
+            Median: signal.NewMedianFilter(window),
+            Kalman: signal.NewKalmanFilter(pVar, mVar, eCovar, float64(initial.Mz)),
+        },
+    }
+}
+
+func (f *BotaFilter) Compute(reading BotaReading) BotaReading {
+    return BotaReading{
+        Fx: float32(f.Fx.Kalman.Compute(f.Fx.Median.Compute(float64(reading.Fx)))),
+        Fy: float32(f.Fy.Kalman.Compute(f.Fy.Median.Compute(float64(reading.Fy)))),
+        Fz: float32(f.Fz.Kalman.Compute(f.Fz.Median.Compute(float64(reading.Fz)))),
+        Mx: float32(f.Mx.Kalman.Compute(f.Mx.Median.Compute(float64(reading.Mx)))),
+        My: float32(f.My.Kalman.Compute(f.My.Median.Compute(float64(reading.My)))),
+        Mz: float32(f.Mz.Kalman.Compute(f.Mz.Median.Compute(float64(reading.Mz)))),
+    }
+}
 
 // ======
 // CONFIG
