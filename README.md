@@ -18,6 +18,8 @@ The data collected from the sensor is a 6x1 vector with the following informatio
 - `Ty` - torque in the y direction
 - `Tz` - torque in the z direction
 
+TMP: talk about the python script
+
 ### tactile sensor
 
 The tactile sensor is made in-house at TU Delft. 

@@ -3,7 +3,7 @@ execution_time = 30 # s
 dt = 0.01 # s
 
 [client]
-ip = "145.94.122.15"
+ip = "145.94.124.38"
 port = 8080
 
 [bota_sensor]
@@ -13,9 +13,9 @@ port = "/dev/ttyUSB0"
 window = 5
 
 [bota_sensor.kf]
-process_variance = 0.01
-measurement_variance = 1.0
-initial_error_covariance = 0.1
+process_variance = 0.05
+measurement_variance = 5.0
+initial_error_covariance = 0.2
 
 [tactile_sensor]
 v_ref = 3.3

@@ -1,20 +1,19 @@
 package commands
 
 import (
-    "fmt"
-    "time"
-    "math"
+	"fmt"
+	// "math"
+	"time"
 
-    "github.com/vistormu/go-berry/comms"
-    "github.com/vistormu/go-berry/utils"
+	"github.com/vistormu/go-berry/comms"
+	"github.com/vistormu/go-berry/utils"
 
-    "tactileforce/sensor"
-    "tactileforce/errors"
-    "tactileforce/config"
+	"tactileforce/ansi"
+	"tactileforce/config"
+	"tactileforce/errors"
+	"tactileforce/sensor"
 )
 
-
-const ClearLastLines = "\033[3A\033[2K\r\033[2K\r\033[2K\r"
 
 func Run(args []string) error {
     if len(args) != 0 {
@@ -31,18 +30,22 @@ func Run(args []string) error {
 
 func run(config *config.Config) error {
     // force sensor
-    fmt.Println("initializing force sensor...")
+    fmt.Printf("%s%s-> %sinitializing program%s\n", 
+        ansi.Screen, ansi.Home,
+        ansi.Cyan2, ansi.Reset,
+    )
+    fmt.Println("   |> setting up force-torque sensor")
     botaSensor, err := sensor.New(config.BotaSensor.Port, sensor.DefaultBotaSensorConfig())
     if err != nil {
         return err
     }
 
     botaSensor.Start()
-    time.Sleep(3 * time.Second)
+    time.Sleep(1 * time.Second)
     defer botaSensor.Close()
 
     // tactile sensor
-    fmt.Println("initializing tactile sensor...")
+    fmt.Println("   |> setting up tactile sensor")
     tactileSensor, err := sensor.NewTactileSensor(
         config.TactileSensor.VRef, 
         config.TactileSensor.ChipSelect,
@@ -51,7 +54,7 @@ func run(config *config.Config) error {
     defer tactileSensor.Close()
 
     // client
-    fmt.Println("initializing client...")
+    fmt.Println("   |> setting up client")
     client, err := comms.NewUdpClient(config.Client.Ip, config.Client.Port)
     if err != nil {
         return err
@@ -59,7 +62,23 @@ func run(config *config.Config) error {
     defer client.Close()
 
     // calibrate
-    fmt.Println("calibrating sensors...")
+    fmt.Println("   |> calibrating sensors")
+    botaFilter := sensor.NewBotaFilter(
+        config.BotaSensor.MedianFilter.Window,
+        config.BotaSensor.KalmanFilter.ProcessVariance,
+        config.BotaSensor.KalmanFilter.MeasurementVariance,
+        config.BotaSensor.KalmanFilter.InitialErrorCovariance,
+        sensor.BotaReading{},
+    )
+
+    tactileFilter := sensor.NewTactileFilter(
+        config.TactileSensor.MedianFilter.Window,
+        config.TactileSensor.KalmanFilter.ProcessVariance,
+        config.TactileSensor.KalmanFilter.MeasurementVariance,
+        config.TactileSensor.KalmanFilter.InitialErrorCovariance,
+        sensor.TactileReading{},
+    )
+
     n := 1000
     tactileReadings := make([]sensor.TactileReading, n)
     botaReadings := make([]sensor.BotaReading, n)
@@ -68,16 +87,16 @@ func run(config *config.Config) error {
         if err != nil {
             return err
         }
-        tactileReadings[i] = tr
-        botaReadings[i] = botaSensor.Read()
+        tactileReadings[i] = tactileFilter.Compute(tr)
+        botaReadings[i] = botaFilter.Compute(botaSensor.Read())
         time.Sleep(time.Duration(config.Simulation.Dt))
     }
     
-    botaReadingInit := sensor.BotaReadingMean(botaReadings)
-    tactileReadingInit := sensor.TactileReadingMean(tactileReadings)
+    botaReadingInit := sensor.BotaReadingMean(botaReadings[200:])
+    tactileReadingInit := sensor.TactileReadingMean(tactileReadings[200:])
 
     // filters
-    botaFilter := sensor.NewBotaFilter(
+    botaFilter = sensor.NewBotaFilter(
         config.BotaSensor.MedianFilter.Window,
         config.BotaSensor.KalmanFilter.ProcessVariance,
         config.BotaSensor.KalmanFilter.MeasurementVariance,
@@ -85,7 +104,7 @@ func run(config *config.Config) error {
         botaReadingInit,
     )
 
-    tactileFilter := sensor.NewTactileFilter(
+    tactileFilter = sensor.NewTactileFilter(
         config.TactileSensor.MedianFilter.Window,
         config.TactileSensor.KalmanFilter.ProcessVariance,
         config.TactileSensor.KalmanFilter.MeasurementVariance,
@@ -105,15 +124,40 @@ func run(config *config.Config) error {
     
     // loop
     programStart := time.Now()
+    loopCounter := 0
+    loopTimeAcc := 0.0
 
-loop:
-    for range int(float64(config.Simulation.ExecutionTime)/config.Simulation.Dt) {
+    loop:
+    for {
     select {
     case <-stopper.Listen():
-        fmt.Println("\nReceived interrupt signal. Stopping sensor...")
+        fmt.Printf("%s%s-> %sfinished%s\n   |> keyboard interrupt\n", 
+            ansi.Screen, ansi.Home,
+            ansi.Yellow2, ansi.Reset,
+        )
         break loop
 
     case <-ticker.C:
+        if int(time.Since(programStart).Seconds()) >= config.Simulation.ExecutionTime {
+            fmt.Printf("%s%s-> %sfinished%s\n   |> elapsed time: %.d/%.d s\n   |> continue? [y/n]: ", 
+                ansi.Screen, ansi.Home,
+                ansi.Yellow2, ansi.Reset,
+                config.Simulation.ExecutionTime,
+                config.Simulation.ExecutionTime,
+            )
+            var answer string
+            fmt.Scan(&answer)
+
+            if answer == "n" {
+                break loop
+            }
+
+            programStart = time.Now()
+            loopCounter = 0
+            loopTimeAcc = 0.0
+            continue loop
+        }
+
         loopStart := time.Now()
 
         // force sensor
@@ -127,7 +171,7 @@ loop:
             return err
         }
         tactileReading = tactileFilter.Compute(tactileReading)
-        tactileReading = tactileReading.Sub(tactileReadingInit)
+        tactileReadingRel := tactileReading.Sub(tactileReadingInit)
 
 
         data["fx"] = float64(botaReading.Fx)
@@ -136,14 +180,14 @@ loop:
         data["mx"] = float64(botaReading.Mx)
         data["my"] = float64(botaReading.My)
         data["mz"] = float64(botaReading.Mz)
-        data["s0v"] = tactileReading.S0v * 100
-        data["s1v"] = tactileReading.S1v * 100
-        data["s2v"] = tactileReading.S2v * 100
-        data["s3v"] = tactileReading.S3v * 100
-        data["s0b"] = math.Abs(tactileReading.S0v - tactileReading.S0b) * 100
-        data["s1b"] = math.Abs(tactileReading.S1v - tactileReading.S1b) * 100
-        data["s2b"] = math.Abs(tactileReading.S2v - tactileReading.S2b) * 100
-        data["s3b"] = math.Abs(tactileReading.S3v - tactileReading.S3b) * 100
+        data["s0"] = tactileReadingRel.S0v * 100
+        data["s1"] = tactileReadingRel.S1v * 100
+        data["s2"] = tactileReadingRel.S2v * 100
+        data["s3"] = tactileReadingRel.S3v * 100
+        // data["s0b"] = math.Abs(tactileReading.S0v - tactileReading.S0b) * 4600
+        // data["s1b"] = math.Abs(tactileReading.S1v - tactileReading.S1b) * 4600
+        // data["s2b"] = math.Abs(tactileReading.S2v - tactileReading.S2b) * 4600
+        // data["s3b"] = math.Abs(tactileReading.S3v - tactileReading.S3b) * 4600
         data["time"] = time.Since(programStart).Seconds()
 
         err = client.Send(data)
@@ -151,12 +195,16 @@ loop:
             return err
         }
 
+        loopCounter += 1
+        loopTimeAcc += time.Since(loopStart).Seconds() * 1000
+
         // PRINT
-        fmt.Printf("%s-> running experiment\n   |> elapsed time: %.0f/%.d s\n   |> time per iteration: %.2f ms", 
-            ClearLastLines,
+        fmt.Printf("%s%s-> %srunning%s\n   |> elapsed time: %.0f/%.d s\n   |> time per iteration: %.2f ms\n", 
+            ansi.Screen, ansi.Home,
+            ansi.Green2, ansi.Reset,
             time.Since(programStart).Seconds(),
             config.Simulation.ExecutionTime,
-            time.Since(loopStart).Seconds() * 1000,
+            loopTimeAcc / float64(loopCounter),
         )
     }
     }
