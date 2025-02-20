@@ -1,0 +1,4 @@
+pillow
+numpy
+adafruit-circuitpython-ssd1306
+netifaces

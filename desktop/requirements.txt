@@ -1,0 +1,7 @@
+catasta
+matplotlib
+seaborn
+pandas
+fastapi
+uvicorn[standard]
+pydantic
