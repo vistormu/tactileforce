@@ -1,0 +1,5 @@
+matplotlib
+pandas
+numpy
+catasta
+autopep8

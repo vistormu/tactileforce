@@ -1,0 +1,48 @@
+[simulation]
+execution_time = 1200 # s
+dt = 0.01 # s
+calibration_time = 1 # s
+calibration_trim = 20 # %
+
+[client]
+ip = "145.94.126.140"
+port = 8080
+
+[bota_sensor]
+port = "/dev/ttyUSB0"
+
+[bota_sensor.mf]
+window = 20
+post_window = 10
+threshold = 0.1
+
+[bota_sensor.kf]
+process_variance = 0.1
+measurement_variance = 2.0
+initial_error_covariance = 20.0
+
+[tactile_sensor]
+v_ref = 3.3
+chip_select = 25
+led_on_off = 24
+
+[tactile_sensor.mf]
+window = 20
+post_window = 10
+threshold = 0.01
+
+[tactile_sensor.kf]
+process_variance = 0.1
+measurement_variance = 2.0
+initial_error_covariance = 20
+
+[model]
+local = true
+path = "models/transformer.onnx"
+n_inputs = 4
+n_outputs = 3
+
+[model.mf]
+window = 20
+post_window = 10
+threshold = 0.01
