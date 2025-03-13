@@ -9,7 +9,7 @@ import (
 	"github.com/vistormu/go-berry/utils"
 	"github.com/vistormu/go-berry/utils/ansi"
 
-	"tactileforce/config"
+	"tactileforce/configs"
 	"tactileforce/errors"
 	"tactileforce/sensors"
 )
@@ -20,7 +20,7 @@ func Calibrate(args []string) error {
         return errors.New(errors.N_ARGS, 0, len(args))
     }
 
-    config, err := config.LoadConfig()
+    config, err := configs.LoadConfig()
     if err != nil {
         return errors.New(errors.CONFIG, err)
     }
@@ -28,7 +28,7 @@ func Calibrate(args []string) error {
     return calibrate(config)
 }
 
-func calibrate(config *config.Config) error {
+func calibrate(config *configs.Config) error {
     // tactile sensor
     fmt.Println("   |> setting up tactile sensor")
     tactileSensor, err := sensors.NewTactileSensor(

@@ -1,8 +1,8 @@
-# data acquisition for the force-torque sensor and the tactile sensor
+# raspberry
 
-This is the code for my PhD internship at TU Delft. It receives data from the force-torque sensor and the tactile sensor using a Raspberry Pi 4B. The data is sent to a server using a UDP connection.
+this is the code related to the data acquisition for the force-torque sensor and the tactile sensor
 
-## components
+## sensors
 
 ### torque-force sensor
 
@@ -17,8 +17,6 @@ The data collected from the sensor is a 6x1 vector with the following informatio
 - `Tx` - torque in the x direction
 - `Ty` - torque in the y direction
 - `Tz` - torque in the z direction
-
-TMP: talk about the python script
 
 ### tactile sensor
 
