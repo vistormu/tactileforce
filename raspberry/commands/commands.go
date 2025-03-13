@@ -10,7 +10,6 @@ type CommnadFunc func(args []string) error
 var commands = map[string]CommnadFunc{
     "run": Run,
     "calibrate": Calibrate,
-    "help": Help,
 }
 
 func Execute(args []string) {

@@ -3,16 +3,13 @@ package commands
 import (
 	"fmt"
 	"time"
-    "strings"
 
 	"github.com/vistormu/go-berry/comms"
-    "github.com/vistormu/go-berry/ml"
 	"github.com/vistormu/go-berry/utils"
 	"github.com/vistormu/go-berry/utils/ansi"
 	"github.com/vistormu/go-berry/utils/num"
-	// "github.com/vistormu/go-berry/utils/signal"
 
-	"tactileforce/config"
+	"tactileforce/configs"
 	"tactileforce/errors"
 	"tactileforce/sensors"
 )
@@ -23,7 +20,7 @@ func Run(args []string) error {
         return errors.New(errors.N_ARGS, 0, len(args))
     }
 
-    config, err := config.LoadConfig()
+    config, err := configs.LoadConfig()
     if err != nil {
         return errors.New(errors.CONFIG, err)
     }
@@ -31,21 +28,11 @@ func Run(args []string) error {
     return run(config)
 }
 
-func run(config *config.Config) error {
-    // force sensor
+func run(config *configs.Config) error {
     fmt.Printf("%s%s-> %sinitializing program%s\n", 
         ansi.Screen, ansi.Home,
         ansi.Cyan2, ansi.Reset,
     )
-    fmt.Println("   |> setting up force-torque sensor")
-    botaSensor, err := sensors.New(config.BotaSensor.Port, sensors.DefaultBotaSensorConfig())
-    if err != nil {
-        return err
-    }
-
-    botaSensor.Start()
-    time.Sleep(1 * time.Second)
-    defer botaSensor.Close()
 
     // tactile sensor
     fmt.Println("   |> setting up tactile sensor")
@@ -56,31 +43,6 @@ func run(config *config.Config) error {
     )
     defer tactileSensor.Close()
 
-    // model
-    fmt.Println("   |> setting up model")
-    var model ml.Model
-    if config.Model.Local {
-        model, err = ml.NewLocalModel(
-            config.Model.Path,
-            config.Model.NInputs,
-            config.Model.NOutputs,
-        )
-    } else {
-        model, _ = ml.NewRemoteModel(
-            config.Client.Ip,
-            config.Client.Port,
-            "predict",
-            "output",
-            []string{"s0", "s1", "s2", "s3"},
-        )
-    }
-    if err != nil {
-        return err
-    }
-    defer model.Close()
-
-    // modelFilter := signal.NewMultiMedianFilter[float32](config.TactileSensor.MedianFilter.Window, 4)
-
     // client
     fmt.Println("   |> setting up client")
     client, err := comms.NewUdpClient(config.Client.Ip, config.Client.Port)
@@ -88,6 +50,17 @@ func run(config *config.Config) error {
         return err
     }
     defer client.Close()
+
+    // force sensor
+    fmt.Println("   |> setting up force-torque sensor")
+    botaSensor, err := sensors.New(config.BotaSensor.Port, sensors.DefaultBotaSensorConfig())
+    if err != nil {
+        return err
+    }
+
+    botaSensor.Start()
+    time.Sleep(1 * time.Second)
+    defer botaSensor.Close()
 
     // filters
     botaReadingInit := make([]float64, 6)
@@ -125,8 +98,8 @@ func run(config *config.Config) error {
     ticker := time.NewTicker(time.Duration(config.Simulation.Dt * 1e9))
     defer ticker.Stop()
 
+    timeout := time.After(time.Duration(config.Simulation.ExecutionTime)*time.Second)
 
-    
     // variables
     n := int(float64(config.Simulation.CalibrationTime) / config.Simulation.Dt)
     tactileReadings := utils.NewQueue[[]float64](n)
@@ -142,38 +115,12 @@ func run(config *config.Config) error {
     case <-stopper.Listen():
         break loop
 
+    case <-timeout:
+        break loop
+
     case <-ticker.C:
-        simulationEnded := int(time.Since(programStart).Seconds()) >= config.Simulation.ExecutionTime
-        calibrated := botaReadings.Full() && tactileReadings.Full()
-
-        // program ended
-        if simulationEnded && calibrated {
-            var answer string
-            fmt.Printf("%s%s-> %sfinished%s\n   |> elapsed time: %.d/%.d s\n   |> repeat? [y/n]: ", 
-                ansi.Screen, ansi.Home,
-                ansi.Yellow2, ansi.Reset,
-                config.Simulation.ExecutionTime,
-                config.Simulation.ExecutionTime,
-            )
-            fmt.Scan(&answer)
-
-            if strings.TrimSpace(answer) == "n" {
-                break loop
-            }
-
-            loopCounter = 0
-            loopTimeAcc = 0.0
-            botaReadings.Clear()
-            tactileReadings.Clear()
-            botaFilter.Reset(make([]float64, 6))
-            tactileFilter.Reset(make([]float64, 4))
-            programStart = time.Now()
-
-            continue loop
-        }
-
         // calibration
-        if !calibrated {
+        if !botaReadings.Full() && !tactileReadings.Full() {
             tr, err := tactileSensor.Read()
             if err != nil {
                 return err
@@ -215,13 +162,6 @@ func run(config *config.Config) error {
         }
         tr = tactileFilter.Compute(tr)
 
-        // model
-        // modelOutput, err := model.Compute(tr)
-        // if err != nil {
-        //     return err
-        // }
-        // modelOutput = modelFilter.Compute(modelOutput)
-
         data := map[string]float64 {
             "time": time.Since(programStart).Seconds(),
 
@@ -257,6 +197,13 @@ func run(config *config.Config) error {
         )
     }
     }
+
+    fmt.Printf("%s%s-> %sprogram finished%s\n   |> elapsed time: %.0f/%.d s\n", 
+        ansi.Screen, ansi.Home,
+        ansi.Yellow, ansi.Reset,
+        time.Since(programStart).Seconds(),
+        config.Simulation.CalibrationTime,
+    )
 
     return nil
 }
