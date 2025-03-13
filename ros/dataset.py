@@ -1,9 +1,9 @@
-import argparse
 import time
 from typing import NamedTuple, List
 
 from panda import Panda
-from echro import echo
+
+from src import ansi
 
 Z_DOWN = [0.0, 1.0, 0.0, 0.0]
 HOME = [0.510, 0.0160, 0.090]
@@ -21,26 +21,6 @@ def format_time(seconds: int) -> str:
     parts.append(f"{seconds}s")
 
     return " ".join(parts)
-
-
-def home() -> None:
-    panda = Panda(rate=10)
-
-    panda.start("giovanni")
-    panda.home()
-
-
-def read() -> None:
-    panda = Panda(rate=10)
-    panda.start("giovanni")
-
-    while True:
-        state, err = panda.step()
-        if err is not None:
-            print(err)
-            break
-
-        print(state)
 
 
 class Point(NamedTuple):
@@ -232,16 +212,16 @@ def dataset():
                     progress = int(counter/(n_positions*n_radii*n_forces*n_touchs)*100)
                     elapsed = int(time.time() - start_time)
                     remaining = int((1-progress/100) * elapsed)
-                    echo(
-                        f"-> moving robot\n",
-                        f"   |> touch:     {touch_idx+1} out of {n_touchs}\n",
-                        f"   |> position:  {position_tag} ({position_idx+1} out of {n_positions})\n",
-                        f"   |> force:     {force_tag} ({force_idx+1} out of {n_forces})\n",
-                        f"   |> radius:    {radius_tag} ({radius_idx+1} out of {n_radii})\n",
-                        f"   |> progress:  {progress}%\n",
-                        f"   |> elapsed:   {format_time(elapsed)}\n",
-                        f"   |> remaining: {format_time(remaining)}\n",
-                        pipeline="screen,home,green,0,reset,1,2,3,4,5,6,7",
+                    print(
+                        f"{ansi.CLEAR_SCREEN}{ansi.HOME}{ansi.GREEN}{ansi.BOLD}-> moving robot{ansi.RESET}",
+                        f"   |> touch:     {touch_idx+1} out of {n_touchs}",
+                        f"   |> position:  {position_tag} ({position_idx+1} out of {n_positions})",
+                        f"   |> force:     {force_tag} ({force_idx+1} out of {n_forces})",
+                        f"   |> radius:    {radius_tag} ({radius_idx+1} out of {n_radii})",
+                        f"   |> progress:  {progress}%",
+                        f"   |> elapsed:   {format_time(elapsed)}",
+                        f"   |> remaining: {format_time(remaining)}",
+                        sep="\n",
                     )
 
                     # press
@@ -284,18 +264,5 @@ def dataset():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--command", type=str, required=True,)
-    args = parser.parse_args()
-
-    command = args.command
-
-    if command == "home":
-        home()
-    elif command == "read":
-        read()
-    elif command == "run":
-        # run()
-        dataset()
-    else:
-        raise ValueError("unkown command")
+    # run()
+    dataset()

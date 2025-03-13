@@ -1,16 +1,16 @@
 .ONESHELL:
 SHELL := /bin/bash
 
-run:
-	clear && python3 main.py --command run
+dataset:
+	clear && python3 dataset.py
 
 home:
-	clear && python3 main.py --command home
+	clear && python3 home.py
 
 read:
-	clear && python3 main.py --command read
+	clear && python3 read.py
 
-steps:
-	clear && python3 main.py --command steps
+control:
+	clear && python3 control.py
 
-.PHONY: run home read
+.PHONY: dataset home read
