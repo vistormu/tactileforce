@@ -76,7 +76,7 @@ def main(config_path: str) -> None:
     predicted_until = 0
 
     # client
-    client = Client("145.94.181.111", 8080) if CONTROL else None
+    client = Client("145.94.189.167", 8080) if CONTROL else None
 
     learning_time_exceeded = False
     start_time = time.time()
@@ -140,11 +140,12 @@ def main(config_path: str) -> None:
             # for i, pred in enumerate(prediction):
             #     data.update_numpy({f"pred_{i}": pred})
 
-            data.update_numpy({
-                "fx_pred": fx_pred,
-                "fy_pred": fy_pred,
-                "fz_pred": fz_pred,
-            })
+            if fx_pred.ndim > 0 and len(fx_pred) > 0:
+                data.update_numpy({
+                    "fx_pred": fx_pred,
+                    "fy_pred": fy_pred,
+                    "fz_pred": fz_pred,
+                })
 
             predicted_until = data_len
             plotter.update(data)
