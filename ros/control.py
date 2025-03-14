@@ -72,7 +72,7 @@ def main() -> None:
             if err is not None:
                 raise err
 
-            delta_pos = filt_f / 500
+            delta_pos = filt_f / np.array([100, 100, 500])
 
             current_attractor = state.end_effector_position
             new_attractor = current_attractor + delta_pos
