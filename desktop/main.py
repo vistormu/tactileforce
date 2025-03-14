@@ -151,7 +151,7 @@ def main(config_path: str) -> None:
             plotter.update(data)
 
             # training stopped
-            if ((time.time()-start_time) > config.model.learning_time):
+            if time.time()-start_time > config.model.learning_time:
                 # switch to hard inference
                 if not learning_time_exceeded:
                     print(
@@ -168,17 +168,17 @@ def main(config_path: str) -> None:
                     fz_model.close()
                     learning_time_exceeded = True
 
-                    continue
-
                 # send force data to server
                 client.send_data({
-                    # "fx": data["fx_pred"][-1],
-                    # "fy": data["fy_pred"][-1],
-                    # "fz": data["fz_pred"][-1],
-                    "fx": data["fx"][-1],
-                    "fy": data["fy"][-1],
-                    "fz": data["fz"][-1],
+                    "fx": data["fx_pred"][-1],
+                    "fy": data["fy_pred"][-1],
+                    "fz": data["fz_pred"][-1],
+                    # "fx": data["fx"][-1],
+                    # "fy": data["fy"][-1],
+                    # "fz": data["fz"][-1],
                 }) if client is not None else None
+
+                continue
 
             # training
             if data_len - trained_until < config.model.required_samples:

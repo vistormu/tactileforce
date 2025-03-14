@@ -33,7 +33,7 @@ max_samples = 512
 epochs = 20
 batch_size = 32
 lr = 0.001
-learning_time = 10
+learning_time = 120
 
 [plot]
 layout = "3x2"
