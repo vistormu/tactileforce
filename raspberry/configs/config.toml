@@ -5,7 +5,7 @@ calibration_time = 1 # s
 calibration_trim = 20 # %
 
 [client]
-ip = "145.94.126.140"
+ip = "145.94.126.28"
 port = 8080
 
 [bota_sensor]

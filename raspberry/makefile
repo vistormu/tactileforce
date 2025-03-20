@@ -8,7 +8,7 @@ calibrate:
 	clear && sudo go run . calibrate
 
 startup:
-	chmod +x /home/raspberry/projects/tactileforce/startup/startup.sh
+	chmod +x /home/raspberry/projects/tactileforce/raspberry/startup/startup.sh
 	crontab -e
 
 server:
