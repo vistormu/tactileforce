@@ -1,7 +1,6 @@
 from typing import Union, Tuple, Sequence
 
 import rospy
-from rospy.core import is_shutdown
 
 from .panda_state import PandaState
 from .controllers import get_controller
@@ -21,11 +20,13 @@ class Panda:
 
         configuration = self.controller.get_configuration()
         position, orientation = self.controller.get_end_effector_pose()
+        gripper = self.controller.get_gripper_width()
 
         return PandaState(
             end_effector_position=position,
             end_effector_orientation=orientation,
             configuration=configuration,
+            gripper_width=gripper,
         )
 
     def set_pose(self, position: Sequence[float], orientation: Sequence[float]) -> None:
@@ -46,6 +47,24 @@ class Panda:
 
         self.controller.go_to_pose(position, orientation, duration)
 
+    def grasp(self, width: float, speed: float, force: float) -> None:
+        if width < 0 or width > 1:
+            print("todo")
+            return
+
+        self.controller.grasp(width, speed, force)
+
+    def set_stiffness(self, translational: Sequence[float], rotational: Sequence[float], nullspace: float) -> None:
+        if len(translational) != 3:
+            print("todo")
+            return
+
+        if len(rotational) != 3:
+            print("todo")
+            return
+
+        self.controller.set_stiffness(translational, rotational, nullspace)
+
     def home(self) -> None:
         self.controller.go_to_pose(position=self.HOME_POSITION, orientation=self.HOME_ORIENTATION, duration=2.0)
 
@@ -55,6 +74,7 @@ class Panda:
 
         configuration = self.controller.get_configuration()
         position, orientation = self.controller.get_end_effector_pose()
+        gripper = self.controller.get_gripper_width()
 
         self.rate.sleep()
 
@@ -62,6 +82,7 @@ class Panda:
             end_effector_position=position,
             end_effector_orientation=orientation,
             configuration=configuration,
+            gripper_width=gripper,
         ), None
 
     def close(self) -> None:

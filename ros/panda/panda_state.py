@@ -7,6 +7,7 @@ class PandaState:
     end_effector_position: np.ndarray
     end_effector_orientation: np.ndarray
     configuration: np.ndarray
+    gripper_width: float
 
     @staticmethod
     def zero():
@@ -14,6 +15,7 @@ class PandaState:
             end_effector_position=np.zeros(3),
             end_effector_orientation=np.zeros(4),
             configuration=np.zeros(7),
+            gripper_width=0,
         )
 
     def __repr__(self) -> str:
@@ -39,4 +41,7 @@ PANDA STATE
    |> q5: {self.configuration[4]:.2f} rad | {self.configuration[4]/np.pi*180:.2f} deg
    |> q6: {self.configuration[5]:.2f} rad | {self.configuration[5]/np.pi*180:.2f} deg
    |> q7: {self.configuration[6]:.2f} rad | {self.configuration[6]/np.pi*180:.2f} deg
+
+-> gripper configuration:
+   |> {self.gripper_width:.3f} m
 """

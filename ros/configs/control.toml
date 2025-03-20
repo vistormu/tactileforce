@@ -1,0 +1,21 @@
+[panda]
+rate = 10
+controller = "giovanni"
+home_pos = [0.62, -0.30, 0.60]
+home_ori = [0.5, 0.5, 0.5, 0.5]
+translational_stiffness = 640
+rotational_stiffness = 40
+nullspace_stiffness = 0
+use_gripper = false
+
+[server]
+ip = "auto"
+port = 8080
+timeout = 2
+
+[force]
+alpha = 0.75
+fx_res = 75
+fy_res = 75
+fz_res = 75
+valid_radius = 0.05

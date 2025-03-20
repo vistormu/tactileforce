@@ -23,3 +23,15 @@ class Controller(ABC):
     @abstractmethod
     def get_end_effector_pose(self) -> Tuple[np.ndarray, np.ndarray]:
         pass
+
+    @abstractmethod
+    def grasp(self, width: float, speed: float, force: float) -> None:
+        pass
+
+    @abstractmethod
+    def get_gripper_width(self) -> float:
+        pass
+
+    @abstractmethod
+    def set_stiffness(self, translational: Sequence[float], rotational: Sequence[float], nullspace: float) -> None:
+        pass

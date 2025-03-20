@@ -1,4 +1,5 @@
 import queue
+import sys
 
 import numpy as np
 
@@ -6,10 +7,8 @@ from panda import Panda
 from src import (
     Server,
     ansi,
+    load_config,
 )
-
-HOME_POS = (0.62, -0.30, 0.60)
-HOME_ORI = (0.5, 0.5, 0.5, 0.5)
 
 
 def get(data: queue.Queue):
@@ -20,25 +19,44 @@ def get(data: queue.Queue):
 
 
 def main() -> None:
+    # config
+    config = load_config()
+
+    # initialize panda
     panda = Panda(rate=10)
     panda.start("giovanni")
-    panda.go_to_pose(
-        position=HOME_POS,
-        orientation=HOME_ORI,
-        duration=2.0,
+    panda.set_stiffness(
+        translational=[config.panda.translational_stiffness]*3,
+        rotational=[config.panda.rotational_stiffness]*3,
+        nullspace=config.panda.nullspace_stiffness,
     )
 
+    # homing
+    panda.go_to_pose(
+        position=config.panda.home_pos,
+        orientation=config.panda.home_ori,
+        duration=2.0,
+    )
+    if config.panda.use_gripper:
+        panda.grasp(0.08, 0.05, 5)
+        input("press any key to continue")
+        panda.grasp(0.3, 0.05, 5)
+        sys.stdin.flush()
+        sys.stdout.flush()
+
+    # queues
     data_queue = queue.Queue()
     event_queue = queue.Queue()
 
-    server = Server(data_queue, event_queue, 2)
-    server.start(host="auto", port=8080)
+    # server
+    server = Server(data_queue, event_queue, config.server.timeout)
+    server.start(host=config.server.ip, port=config.server.port)
 
+    # variables
     client_connected = False
     data = {}
     f = np.array([0, 0, 0])
     filt_f = f
-    alpha = 0.75
 
     while True:
         try:
@@ -66,19 +84,19 @@ def main() -> None:
                     -data["fy"],
                 ])
 
-            filt_f = alpha * f + (1 - alpha) * filt_f
+            filt_f = config.force.alpha * f + (1 - config.force.alpha) * filt_f
 
             state, err = panda.step()
             if err is not None:
                 raise err
 
-            delta_pos = filt_f / np.array([100, 100, 500])
+            delta_pos = filt_f / np.array([config.force.fx_res, config.force.fy_res, config.force.fz_res])
 
             current_attractor = state.end_effector_position
             new_attractor = current_attractor + delta_pos
             distance = np.linalg.norm(new_attractor-current_attractor)
 
-            if distance > 0.05:
+            if distance > config.force.valid_radius:
                 continue
 
             print(
@@ -92,7 +110,7 @@ def main() -> None:
 
             panda.go_to_pose(
                 position=new_attractor.tolist(),
-                orientation=HOME_ORI,
+                orientation=config.panda.home_ori,
                 duration=0.05,
             )
 
@@ -105,12 +123,14 @@ def main() -> None:
                 end="\n\n",
             )
 
-            break
+            if config.panda.use_gripper:
+                panda.grasp(0.08, 0.1, 5)
 
-    panda.close()
-    server.stop()
+            panda.close()
+            server.stop()
+
+            return
 
 
 if __name__ == "__main__":
-    # home()
     main()
