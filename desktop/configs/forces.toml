@@ -9,7 +9,7 @@ port = 8080
 control = true
 
 [data]
-save = false
+save = true
 path = "data/"
 date_format = "%d-%m-%Y_%H-%M-%S"
 
@@ -35,7 +35,7 @@ max_samples = 512
 epochs = 20
 batch_size = 32
 lr = 0.001
-learning_time = 60
+learning_time = 30
 model = "multi_head_fnn"
 single_model = true
 tau = 0.1
