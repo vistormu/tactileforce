@@ -14,8 +14,6 @@ from src import (
     Client,
 )
 
-CONTROL = True
-
 
 def get(data: queue.Queue):
     try:
@@ -29,7 +27,7 @@ def train_model(model,
                 data_len: int,
                 max_samples: int,
                 data: Data,
-                target: str,
+                target: str | list[str],
                 ) -> None:
     if model.is_training:
         return
@@ -45,7 +43,10 @@ def train_model(model,
         data["s3"][slc] / 100,
     ]).T
 
-    y = data[target][slc]
+    if isinstance(target, str):
+        y = data[target][slc]
+    else:
+        y = np.array([data[t][slc] for t in target]).T
 
     model.start(x, y)
 
@@ -68,15 +69,23 @@ def main(config_path: str) -> None:
     data = Data(config.data.path, config.data.save, config.data.date_format)
 
     # model
-    # model = Model(config.model)
-    fx_model = Model(config.model)
-    fy_model = Model(config.model)
-    fz_model = Model(config.model)
+    model = None
+    fx_model = None
+    fy_model = None
+    fz_model = None
+
+    if config.model.single_model:
+        model = Model(config.model)
+    else:
+        fx_model = Model(config.model)
+        fy_model = Model(config.model)
+        fz_model = Model(config.model)
+
     trained_until = 0
     predicted_until = 0
 
     # client
-    client = Client("145.94.189.167", 8080) if CONTROL else None
+    client = Client(config.client.ip, config.client.port) if config.client.control else None
 
     learning_time_exceeded = False
     start_time = time.time()
@@ -95,7 +104,6 @@ def main(config_path: str) -> None:
             if event == "connected" and not client_connected:
                 client_connected = True
 
-                # model = Model(config.model)
                 trained_until = 0
                 predicted_until = 0
 
@@ -111,9 +119,18 @@ def main(config_path: str) -> None:
 
                 data.save()
                 plotter.save()
-                fx_model.close()
-                fy_model.close()
-                fz_model.close()
+
+                if model is not None:
+                    model.close()
+
+                if fx_model is not None:
+                    fx_model.close()
+
+                if fy_model is not None:
+                    fy_model.close()
+
+                if fz_model is not None:
+                    fz_model.close()
 
                 continue
 
@@ -130,15 +147,25 @@ def main(config_path: str) -> None:
                 data["s2"][predicted_until:] / 100,
                 data["s3"][predicted_until:] / 100,
             ]).T
-            fx_pred = fx_model.predict(input_data)
-            fy_pred = fy_model.predict(input_data)
-            fz_pred = fz_model.predict(input_data)
 
-            # if len(prediction.shape) == 1:
-            #     prediction = prediction.reshape(1, -1)
+            fx_pred = np.array([])
+            fy_pred = np.array([])
+            fz_pred = np.array([])
 
-            # for i, pred in enumerate(prediction):
-            #     data.update_numpy({f"pred_{i}": pred})
+            if model is not None:
+                f_pred = model.predict(input_data).T
+                fx_pred = f_pred[0]
+                fy_pred = f_pred[1]
+                fz_pred = f_pred[2]
+
+            if fx_model is not None:
+                fx_pred = fx_model.predict(input_data)
+
+            if fy_model is not None:
+                fy_pred = fy_model.predict(input_data)
+
+            if fz_model is not None:
+                fz_pred = fz_model.predict(input_data)
 
             if fx_pred.ndim > 0 and len(fx_pred) > 0:
                 data.update_numpy({
@@ -157,15 +184,23 @@ def main(config_path: str) -> None:
                     print(
                         f"{ansi.BOLD}{ansi.YELLOW}-> learning time exceeded{ansi.RESET}",
                         "   |> switching to hard inference",
-                        "   |> sending force data to server" if CONTROL else "",
+                        "   |> sending force data to server" if config.client.control else "",
                         sep="\n",
                         end="\n\n",
                     )
-                    # model.update_inference_model("hard")
-                    # model.close()
-                    fx_model.close()
-                    fy_model.close()
-                    fz_model.close()
+
+                    if model is not None:
+                        model.close()
+
+                    if fx_model is not None:
+                        fx_model.close()
+
+                    if fy_model is not None:
+                        fy_model.close()
+
+                    if fz_model is not None:
+                        fz_model.close()
+
                     learning_time_exceeded = True
 
                 # send force data to server
@@ -184,9 +219,17 @@ def main(config_path: str) -> None:
             if data_len - trained_until < config.model.required_samples:
                 continue
 
-            train_model(fx_model, trained_until, data_len, config.model.max_samples, data, "fx")
-            train_model(fy_model, trained_until, data_len, config.model.max_samples, data, "fy")
-            train_model(fz_model, trained_until, data_len, config.model.max_samples, data, "fz")
+            if model is not None:
+                train_model(model, trained_until, data_len, config.model.max_samples, data, ["fx", "fy", "fz"])
+
+            if fx_model is not None:
+                train_model(fx_model, trained_until, data_len, config.model.max_samples, data, "fx")
+
+            if fy_model is not None:
+                train_model(fy_model, trained_until, data_len, config.model.max_samples, data, "fy")
+
+            if fz_model is not None:
+                train_model(fz_model, trained_until, data_len, config.model.max_samples, data, "fz")
 
         except KeyboardInterrupt:
             print(
@@ -201,11 +244,21 @@ def main(config_path: str) -> None:
 
     server.stop()
     plotter.close()
-    # model.close()
-    fx_model.close()
-    fy_model.close()
-    fz_model.close()
-    client.close() if client is not None else None
+
+    if model is not None:
+        model.close()
+
+    if fx_model is not None:
+        fx_model.close()
+
+    if fy_model is not None:
+        fy_model.close()
+
+    if fz_model is not None:
+        fz_model.close()
+
+    if client is not None:
+        client.close()
 
 
 if __name__ == '__main__':

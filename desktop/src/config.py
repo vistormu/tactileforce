@@ -2,6 +2,64 @@ from typing import NamedTuple
 import tomllib
 
 
+# ======
+# SERVER
+# ======
+class ServerConfig(NamedTuple):
+    ip: str
+    port: int
+    timeout: float
+
+
+# ======
+# CLIENT
+# ======
+class ClientConfig(NamedTuple):
+    ip: str
+    port: int
+    control: bool
+
+
+# ====
+# DATA
+# ====
+class DataConfig(NamedTuple):
+    save: bool
+    path: str
+    date_format: str
+
+
+# ======
+# FIGURE
+# ======
+class FigureConfig(NamedTuple):
+    save: bool
+    path: str
+    date_format: str
+    format: str
+
+
+# =====
+# MODEL
+# =====
+class ModelConfig(NamedTuple):
+    targets: list[str]
+    features: list[str]
+    required_samples: int
+    max_samples: int
+    epochs: int
+    batch_size: int
+    lr: float
+    learning_time: int
+    model: str
+    single_model: bool
+    tau: float
+    hyperparameters: dict
+
+
+# ====
+# PLOT
+# ====
 class AxisConfig(NamedTuple):
     location: str
     x: str
@@ -23,41 +81,12 @@ class PlotConfig(NamedTuple):
     axes: list[AxisConfig]
 
 
-class ServerConfig(NamedTuple):
-    ip: str
-    port: int
-    timeout: float
-
-
-class DataConfig(NamedTuple):
-    save: bool
-    path: str
-    date_format: str
-
-
-class FigureConfig(NamedTuple):
-    save: bool
-    path: str
-    date_format: str
-    format: str
-
-
-class ModelConfig(NamedTuple):
-    targets: list[str]
-    features: list[str]
-    n_inducing_points: int
-    kernel: str
-    mean: str
-    required_samples: int
-    max_samples: int
-    epochs: int
-    batch_size: int
-    lr: float
-    learning_time: int
-
-
+# ======
+# CONFIG
+# ======
 class Config(NamedTuple):
     server: ServerConfig
+    client: ClientConfig
     data: DataConfig
     figure: FigureConfig
     plot: PlotConfig
@@ -113,15 +142,22 @@ def load_config(path: str) -> Config:
     model = ModelConfig(
         targets=config["model"]["targets"],
         features=config["model"]["features"],
-        n_inducing_points=config["model"]["n_inducing_points"],
-        kernel=config["model"]["kernel"],
-        mean=config["model"]["mean"],
         required_samples=config["model"]["required_samples"],
         max_samples=config["model"]["max_samples"],
         epochs=config["model"]["epochs"],
         batch_size=config["model"]["batch_size"],
         lr=config["model"]["lr"],
         learning_time=config["model"]["learning_time"],
+        model=config["model"]["model"],
+        single_model=config["model"]["single_model"],
+        tau=config["model"]["tau"],
+        hyperparameters=config["model"]["hyperparameters"],
+    )
+
+    client = ClientConfig(
+        ip=config["client"]["ip"],
+        port=config["client"]["port"],
+        control=config["client"]["control"],
     )
 
     return Config(
@@ -130,4 +166,5 @@ def load_config(path: str) -> Config:
         figure=figure,
         plot=plot,
         model=model,
+        client=client,
     )

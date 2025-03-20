@@ -3,6 +3,11 @@ ip = "auto"
 port = 8080
 timeout = 2
 
+[client]
+ip = "145.94.162.95"
+port = 8080
+control = true
+
 [data]
 save = false
 path = "data/"
@@ -25,15 +30,22 @@ black = "#4d5359"
 [model]
 targets = ["fx", "fy", "fz"]
 features = ["s0", "s1", "s2", "s3"]
-n_inducing_points = 32
-kernel = "rq"
-mean = "constant"
 required_samples = 128
 max_samples = 512
 epochs = 20
 batch_size = 32
 lr = 0.001
-learning_time = 120
+learning_time = 60
+model = "multi_head_fnn"
+single_model = true
+tau = 0.1
+
+[model.hyperparameters]
+hidden_dims = [64, 64]
+dropout = 0.2
+# n_inducing_points = 32
+# kernel = "rq"
+# mean = "constant"
 
 [plot]
 layout = "3x2"
