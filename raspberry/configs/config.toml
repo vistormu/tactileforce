@@ -1,5 +1,5 @@
 [simulation]
-execution_time = 1200 # s
+execution_time = 60 # s
 dt = 0.01 # s
 calibration_time = 1 # s
 calibration_trim = 20 # %

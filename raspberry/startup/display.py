@@ -32,6 +32,12 @@ def main() -> None:
 
     font = ImageFont.load_default()
     text = get_ip()
+
+    with open(
+        "/home/raspberry/projects/tactileforce/raspberry/startup/ip.txt", "w"
+    ) as f:
+        f.write(text)
+
     draw.text((10, 10), text, font=font, fill=255)
 
     oled.image(image)
