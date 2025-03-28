@@ -111,14 +111,19 @@ the configuration file of the program is `configs/config.toml`. there you can mo
 
 ### show ip and start server on boot
 
+the `startup/startup.sh` script is the one that shows the ip on the oled screen and starts the server
+
+to execute a shell script at the startup you have to follow these steps:
+
 ```
-make startup
+chmod +x startup/startup.sh
+crontab -e
 ```
 
 and add the following line
 
 ```
-@reboot /home/raspberry/projects/tactileforce/startup/startup.sh
+@reboot /home/raspberry/projects/tactileforce/raspberry/startup/startup.sh >> /home/raspberry/projects/tactileforce/raspberry/startup/startup.log 2>&1
 ```
 
 ## force-torque sensor

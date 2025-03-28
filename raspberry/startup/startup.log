@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/raspberry/projects/tactileforce/raspberry/startup/display.py", line 1, in <module>
+    from PIL import Image, ImageDraw, ImageFont
+ModuleNotFoundError: No module named 'PIL'
+2025/03/28 16:02:16 starting server on 145.94.154.176:8080
+2025/03/28 16:04:17 starting server on 145.94.154.176:8080
+[GIN] 2025/03/28 - 16:07:26 | 200 |    5.948701ms |  145.94.125.137 | GET      "/"
+[GIN] 2025/03/28 - 16:07:26 | 200 |   35.856138ms |  145.94.125.137 | GET      "/static/css/output.css"
+[GIN] 2025/03/28 - 16:07:26 | 200 |    2.975157ms |  145.94.125.137 | GET      "/files/get"
+[GIN] 2025/03/28 - 16:07:26 | 200 |    1.182792ms |  145.94.125.137 | GET      "/themes/get"
+[GIN] 2025/03/28 - 16:07:26 | 200 |    3.428914ms |  145.94.125.137 | GET      "/commands/get"
+[GIN] 2025/03/28 - 16:07:26 | 200 |  398.490329ms |  145.94.125.137 | GET      "/update/check"

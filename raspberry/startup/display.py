@@ -38,7 +38,7 @@ def main() -> None:
     with open(
         "/home/raspberry/projects/tactileforce/raspberry/startup/ip.txt", "w"
     ) as f:
-        f.write(text)
+        f.write(ip)
 
     draw.text((20, 5), text, font=font, fill=255)
 

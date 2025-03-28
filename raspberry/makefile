@@ -11,8 +11,5 @@ startup:
 	chmod +x /home/raspberry/projects/tactileforce/raspberry/startup/startup.sh
 	crontab -e
 
-server:
-	clear && ./abstractme 145.94.60.82:8080
-
 
 .PHONY: run calibrate startup

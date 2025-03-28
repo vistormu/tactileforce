@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/bin/zsh
+sleep 30
 
-PROJECT_PATH="/home/raspberry/projects/tactileforce/raspberry"
-ENV_PATH="/home/raspberry/miniconda3/bin/activate"
+PROJECT_PATH="/home/raspberry/projects/tactileforce/raspberry/"
 IP_PATH="$PROJECT_PATH/startup/ip.txt"
 SERVER_PATH="$PROJECT_PATH/abstractme"
 
 # display the ip on the OLED screen
-source $ENV_PATH tactile
-python $PROJECT_PATH/startup/display.py
-conda deactivate
+cd $PROJECT_PATH/startup
+source .venv/bin/activate
+python display.py
 
 # check if ip.txt exists
 if [[ ! -f "$IP_PATH" ]]; then
@@ -22,5 +22,5 @@ if [[ ! -x "$SERVER_PATH" ]]; then
     exit 1
 fi
 
-cd $PROJECT_PATH
+cd ..
 ./abstractme $(<"$IP_PATH"):8080
