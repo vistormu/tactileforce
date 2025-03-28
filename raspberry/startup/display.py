@@ -16,7 +16,7 @@ def get_ip() -> str:
             return ip
         except (KeyError, ValueError):
             continue
-    return "No IP Found"
+    return "couldn't start server\nplease restart device"
 
 
 def main() -> None:
@@ -31,14 +31,16 @@ def main() -> None:
     draw = ImageDraw.Draw(image)
 
     font = ImageFont.load_default()
-    text = get_ip()
+    ip = get_ip()
+
+    text = "server started at\n" + ip + ":8080"
 
     with open(
         "/home/raspberry/projects/tactileforce/raspberry/startup/ip.txt", "w"
     ) as f:
         f.write(text)
 
-    draw.text((10, 10), text, font=font, fill=255)
+    draw.text((20, 5), text, font=font, fill=255)
 
     oled.image(image)
     oled.show()
