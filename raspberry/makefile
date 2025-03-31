@@ -1,8 +1,8 @@
 .ONESHELL:
-SHELL := /bin/bash
+SHELL := /bin/zsh
 
 run:
-	clear && sudo go run . run
+	clear && sudo -E go run . run
 
 calibrate:
 	clear && sudo go run . calibrate

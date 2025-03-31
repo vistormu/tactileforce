@@ -24,7 +24,7 @@ calibration_trim = 20
 # - ip: the ip of the computer to send the data via udp
 # - port: the port of the connection
 [client]
-ip = "145.94.126.28"
+ip = "145.94.124.156"
 port = 8080
 
 # ------------------- #

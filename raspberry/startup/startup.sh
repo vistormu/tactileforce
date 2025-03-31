@@ -23,4 +23,5 @@ if [[ ! -x "$SERVER_PATH" ]]; then
 fi
 
 cd ..
+export TERM=linux
 ./abstractme $(<"$IP_PATH"):8080
