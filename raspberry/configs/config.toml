@@ -1,13 +1,46 @@
-[simulation]
-execution_time = 60 # s
-dt = 0.01 # s
-calibration_time = 1 # s
-calibration_trim = 20 # %
+# this is the configuration file to modify all the available parameters of the data acquisition program
+# to receive the data, you need a server running in your computer with the same `ip` and `port` specified below
+# check out the github repo for more information: https://github.com/vistormu/tactileforce/raspberry
 
+# ==========
+# simulation
+# ==========
+# here are the variables related to the execution of the program
+# - execution_time: the time in seconds the program will run
+# - dt: the timestep in seconds
+# - calibration_time: the time in seconds spent in calibrating the sensors
+# - calibration_trim: the percentage of initial values to trim from the calibartion (usually the first values are not representative)
+[simulation]
+execution_time = 60
+dt = 0.01
+calibration_time = 1
+calibration_trim = 20
+
+
+# ======
+# client
+# ======
+# in this block all the parameters related to sending the data via udp are defined
+# - ip: the ip of the computer to send the data via udp
+# - port: the port of the connection
 [client]
 ip = "145.94.126.28"
 port = 8080
 
+# ------------------- #
+# END OF NORMAL USAGE #
+# ------------------- #
+# from below you won't need to change anything
+
+# ===================
+# force-torque sensor
+# ===================
+# - port: the usb port that the sensor is connected to. it should default to 0
+# - window: the window of the median filter used to filter the data
+# - post_window: the window of the median filter used after the kalman filter
+# - process_variance: the process variance of the kalman filter
+# - measurement_variance: the measurement variance of the kalman filter
+# - initial_error_covariance: the initial error covariance of the kalman filter
 [bota_sensor]
 port = "/dev/ttyUSB0"
 
@@ -21,6 +54,17 @@ process_variance = 0.1
 measurement_variance = 2.0
 initial_error_covariance = 20.0
 
+# ==============
+# tactile sensor
+# ==============
+# - v_ref: the voltage reference
+# - chip_select: the chip select gpio number of the ADC
+# - led_on_off: the gpio pin to swicth the LEDs on and off
+# - window: the window of the median filter used to filter the data
+# - post_window: the window of the median filter used after the kalman filter
+# - process_variance: the process variance of the kalman filter
+# - measurement_variance: the measurement variance of the kalman filter
+# - initial_error_covariance: the initial error covariance of the kalman filter
 [tactile_sensor]
 v_ref = 3.3
 chip_select = 25

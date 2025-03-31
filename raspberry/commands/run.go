@@ -153,29 +153,47 @@ func run(config *configs.Config) error {
 
         // force sensor
         br := botaSensor.Read()
-        br = botaFilter.Compute(br)
+        brFilt := botaFilter.Compute(br)
 
         // tactile sensor
         tr, err := tactileSensor.Read()
         if err != nil {
             return err
         }
-        tr = tactileFilter.Compute(tr)
+        trFilt := tactileFilter.Compute(tr)
 
-        data := map[string]float64 {
+        data := map[string]any {
+            // time
             "time": time.Since(programStart).Seconds(),
+            "timestamp": time.Now().UnixMilli(),
 
-            "fx": br[0],
-            "fy": br[1],
-            "fz": br[2],
-            "mx": br[3],
-            "my": br[4],
-            "mz": br[5],
+            // force-torque
+            "fx": brFilt[0],
+            "fy": brFilt[1],
+            "fz": brFilt[2],
+            "mx": brFilt[3],
+            "my": brFilt[4],
+            "mz": brFilt[5],
 
-            "s0": tr[0] * 100,
-            "s1": tr[1] * 100,
-            "s2": tr[2] * 100,
-            "s3": tr[3] * 100,
+            // force-torque raw
+            "fx_raw": br[0],
+            "fy_raw": br[1],
+            "fz_raw": br[2],
+            "mx_raw": br[3],
+            "my_raw": br[4],
+            "mz_raw": br[5],
+            
+            // tactile sensor
+            "s0": trFilt[0] * 100,
+            "s1": trFilt[1] * 100,
+            "s2": trFilt[2] * 100,
+            "s3": trFilt[3] * 100,
+
+            // tactile sensor raw
+            "s0_raw": tr[0] * 100,
+            "s1_raw": tr[1] * 100,
+            "s2_raw": tr[2] * 100,
+            "s3_raw": tr[3] * 100,
         }
 
         err = client.Send(data)

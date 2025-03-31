@@ -55,6 +55,35 @@ where command can be either:
 
 also, i created a `makefile` to run these commands for you, so you could use `make run` or `make calibrate`.
 
+## data sent by the program
+
+this is the data that the program sends:
+
+- `time`: the seconds elapsed since the program started
+- `timestamp`: the number or milliseconds elapsed since January 1st 1970
+- `fx`: the filtered and relative force on the x-axis
+- `fy`: the filtered and relative force on the y-axis
+- `fz`: the filtered and relative force on the z-axis
+- `mx`: the filtered and relative torque on the x-axis
+- `my`: the filtered and relative torque on the y-axis
+- `mz`: the filtered and relative torque on the z-axis
+- `s0`: the filtered and relative voltage of the first channel of the tactile sensor
+- `s1`: the filtered and relative voltage of the second channel of the tactile sensor
+- `s2`: the filtered and relative voltage of the third channel of the tactile sensor
+- `s3`: the filtered and relative voltage of the fourth channel of the tactile sensor
+- `fx_raw`: the raw value of the x force
+- `fy_raw`: the raw value of the y force
+- `fz_raw`: the raw value of the z force
+- `mx_raw`: the raw value of the x torque
+- `my_raw`: the raw value of the y torque
+- `mz_raw`: the raw value of the z torque
+- `s0_raw`: the raw value of the first channel
+- `s1_raw`: the raw value of the second channel
+- `s2_raw`: the raw value of the third channel
+- `s3_raw`: the raw value of the fourth channel
+
+if you want to send more data via udp, add it to the `data` map in line `165`.
+
 ---
 
 # additional information
@@ -69,9 +98,7 @@ the entry point of the program is `main.go`, which redirects the execution of th
 
 ### main program
 
-the `run.go` file is the most important one. it reads the configuration file, sets up the sensors and filetrs, and reads and sends the data in the loop.
-
-if you want to send more data via udp, add it to the `data` map in line `165`.
+the `run.go` file is the most important one. it reads the configuration file, sets up the sensors and filters, and reads and sends the data in the loop.
 
 ### sensors
 
@@ -90,7 +117,7 @@ the configuration file of the program is `configs/config.toml`. there you can mo
 
 `[client]`:
 - `ip`: the ip of the computer to send the data via udp
-- `port`: the port of the connexion
+- `port`: the port of the connection
 
 `[bota_sensor]`
 - `port`: the location of the usb port
