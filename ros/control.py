@@ -40,7 +40,7 @@ def main() -> None:
     if config.panda.use_gripper:
         panda.grasp(0.08, 0.05, 5)
         input("press any key to continue")
-        panda.grasp(0.3, 0.05, 5)
+        panda.grasp(0.0, 0.01, 3)
         sys.stdin.flush()
         sys.stdout.flush()
 

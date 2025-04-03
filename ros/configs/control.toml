@@ -6,7 +6,7 @@ home_ori = [0.5, 0.5, 0.5, 0.5]
 translational_stiffness = 640
 rotational_stiffness = 40
 nullspace_stiffness = 0
-use_gripper = false
+use_gripper = true
 
 [server]
 ip = "auto"
